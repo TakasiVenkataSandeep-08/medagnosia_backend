@@ -1,9 +1,12 @@
 import * as admin from "firebase-admin";
 import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
+import serviceAccount from "./serviceAccount.json";
 import { configureGenkit } from "@genkit-ai/core";
 import { defineFirestoreRetriever, firebase } from "@genkit-ai/firebase";
 import { googleAI, textEmbeddingGecko001 } from "@genkit-ai/googleai";
-const serviceAccount = require("../../medagnosia-firebase-adminsdk-rx0j9-a635b4ab18.json");
+
+process.env.GOOGLE_APPLICATION_CREDENTIALS = "./serviceAccount.json";
 
 // **Firebase configuration**
 const firebaseConfig = {
@@ -17,19 +20,26 @@ const firebaseConfig = {
 };
 
 const app = admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
   ...firebaseConfig,
 });
 
+export const auth = getAuth(app);
+
+export const firestore = getFirestore(app);
 configureGenkit({
-  plugins: [firebase(), googleAI({ apiVersion: ["v1", "v1beta"] })],
+  plugins: [
+    firebase(),
+    googleAI({
+      apiVersion: ["v1", "v1beta"],
+      apiKey: process.env.GOOGLE_GENAI_API_KEY,
+    }),
+  ],
   flowStateStore: "firebase",
   logLevel: "debug",
   traceStore: "firebase",
   enableTracingAndMetrics: true,
 });
-
-export const firestore = getFirestore(app);
 
 export const retrieverRef = defineFirestoreRetriever({
   name: "neet_pg_2024",

@@ -1,7 +1,10 @@
 import express from "express";
-import { askAIFlow } from "../flows/askAiFLow";
-import { runFlow } from "@genkit-ai/flow";
-
+import { validateFirebaseToken } from "../middlewares/firebaseTokenValidator";
+import { generateStream } from "@genkit-ai/ai";
+import { retrieve } from "@genkit-ai/ai/retriever";
+import { gemini15Pro } from "@genkit-ai/googleai";
+import { retrieverRef } from "../config/firebase";
+import { systemPrompt } from "../utils/prompts";
 const router = express.Router();
 
 router.post("/stream-data", async (req, res) => {
@@ -22,7 +25,7 @@ router.post("/stream-data", async (req, res) => {
   res.end();
 });
 
-router.post("/askAI", async (req, res) => {
+router.post("/askAI", validateFirebaseToken, async (req, res) => {
   try {
     const { question = "", userHistory = [] } = req.body;
 
@@ -30,12 +33,24 @@ router.post("/askAI", async (req, res) => {
     res.setHeader("Content-Type", "text/plain");
     res.setHeader("Transfer-Encoding", "chunked");
 
-    const stream = await runFlow(askAIFlow, { question, userHistory });
+    const docs = await retrieve({
+      retriever: retrieverRef,
+      query: question,
+      options: { limit: 7 },
+    });
+
+    const { stream } = await generateStream({
+      model: gemini15Pro,
+      prompt: question,
+      context: docs,
+      history: [systemPrompt, ...userHistory],
+      output: { format: "text" },
+    });
     // Stream the response
     for await (const chunk of stream()) {
       if (res.writableEnded) break;
       const responseChunk = chunk;
-      const chunkText = responseChunk.content[0].text;
+      const chunkText = responseChunk?.content[0]?.text;
       if (chunkText) {
         res.write(chunkText);
       }

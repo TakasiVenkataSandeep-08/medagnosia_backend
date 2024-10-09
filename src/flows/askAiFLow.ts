@@ -13,6 +13,11 @@ type AskAIInput = {
 export const askAIFlow = defineFlow(
   {
     name: "askAIFlow",
+    authPolicy: (auth, input) => {
+      if (!auth.uid) {
+        throw new Error("Authorization required.");
+      }
+    },
   },
   async (input: AskAIInput) => {
     const { question, userHistory = [] } = input;
