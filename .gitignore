@@ -24,4 +24,4 @@ yarn-error.log*
 
 # Optional: Uncomment if using Jest for testing
 # /coverage
-/src/config/serviceAccount.json
+serviceAccount.json

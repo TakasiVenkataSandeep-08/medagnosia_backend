@@ -1,12 +1,12 @@
 import * as admin from "firebase-admin";
 import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
-import serviceAccount from "./serviceAccount.json";
+import serviceAccount from "../../serviceAccount.json";
 import { configureGenkit } from "@genkit-ai/core";
 import { defineFirestoreRetriever, firebase } from "@genkit-ai/firebase";
 import { googleAI, textEmbeddingGecko001 } from "@genkit-ai/googleai";
 
-process.env.GOOGLE_APPLICATION_CREDENTIALS = "./serviceAccount.json";
+process.env.GOOGLE_APPLICATION_CREDENTIALS = "../../serviceAccount.json";
 
 // **Firebase configuration**
 const firebaseConfig = {
